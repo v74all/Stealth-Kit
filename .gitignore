@@ -1,0 +1,12 @@
+# Generated reports and state
+backups/scan_report_*.txt
+backups/scan_report_*.md
+backups/scan_report_*.json
+backups/*.backup.*
+backups/mac_addresses.backup
+backups/state/*.jsonl
+
+# Local/editor noise
+.DS_Store
+*.swp
+*.tmp

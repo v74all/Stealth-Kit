@@ -1,0 +1,109 @@
+# ============================================================================
+# Stealth Kit — iptables Firewall Rules
+# Compatible with Kali Linux / Debian
+# ============================================================================
+# Load with: iptables-restore < /path/to/this/file
+# ============================================================================
+
+*filter
+
+# Default policies: DROP everything, allow only outgoing
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+
+# ── Loopback ──
+# Allow all loopback traffic
+-A INPUT -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+
+# ── Established Connections ──
+# Allow traffic for already-established connections
+-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# ── Invalid Packets ──
+# Drop all invalid packets immediately
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+
+# ── Anti-Scan Rules ──
+# Drop NULL packets (Nmap scan detection)
+-A INPUT -p tcp --tcp-flags ALL NONE -j DROP
+
+# Drop XMAS packets (Nmap XMAS scan)
+-A INPUT -p tcp --tcp-flags ALL ALL -j DROP
+
+# Drop SYN-FIN packets (malformed / scan)
+-A INPUT -p tcp --tcp-flags SYN,FIN SYN,FIN -j DROP
+
+# Drop SYN-RST packets (malformed / scan)
+-A INPUT -p tcp --tcp-flags SYN,RST SYN,RST -j DROP
+
+# Drop FIN without ACK
+-A INPUT -p tcp --tcp-flags FIN,ACK FIN -j DROP
+
+# Drop URG without ACK
+-A INPUT -p tcp --tcp-flags URG,ACK URG -j DROP
+
+# Drop PSH without ACK
+-A INPUT -p tcp --tcp-flags PSH,ACK PSH -j DROP
+
+# ── ICMP (Ping) ──
+# Drop all incoming ICMP (invisible to ping)
+-A INPUT -p icmp -j DROP
+
+# Block outgoing ping replies
+-A OUTPUT -p icmp --icmp-type echo-reply -j DROP
+
+# ── NetBIOS / SMB ──
+# Block NetBIOS traffic
+-A INPUT -p tcp --dport 137:139 -j DROP
+-A INPUT -p udp --dport 137:139 -j DROP
+-A INPUT -p tcp --dport 445 -j DROP
+-A INPUT -p udp --dport 445 -j DROP
+
+# ── Discovery Protocols ──
+# Block mDNS (Bonjour / Avahi)
+-A INPUT -p udp --dport 5353 -j DROP
+
+# Block SSDP (UPnP discovery)
+-A INPUT -p udp --dport 1900 -j DROP
+
+# Block LLMNR (Link-Local Multicast Name Resolution)
+-A INPUT -p udp --dport 5355 -j DROP
+
+# ── Broadcast / Multicast ──
+# Drop all broadcast and multicast
+-A INPUT -m addrtype --dst-type BROADCAST -j DROP
+-A INPUT -m addrtype --dst-type MULTICAST -j DROP
+
+# ── New Connections ──
+# No blanket ACCEPT for new inbound connections. Add explicit service allow
+# rules above this section when a host must expose a port.
+
+# ── Logging (optional — comment out for zero logs) ──
+# Log dropped packets with rate limiting
+# -A INPUT -m limit --limit 3/min -j LOG --log-prefix "STEALTH-DROP: " --log-level 4
+
+# ── Final Rule ──
+# Drop everything else
+-A INPUT -j DROP
+-A FORWARD -j DROP
+
+COMMIT
+
+# ── NAT Table (for Tor transparent proxy — optional) ──
+# Uncomment if using Tor transparent proxy
+# *nat
+# :PREROUTING ACCEPT [0:0]
+# :INPUT ACCEPT [0:0]
+# :OUTPUT ACCEPT [0:0]
+# :POSTROUTING ACCEPT [0:0]
+# 
+# # Redirect DNS to Tor
+# -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 5353
+# -A OUTPUT -p tcp --dport 53 -j REDIRECT --to-ports 5353
+# 
+# # Redirect all TCP to Tor TransPort
+# -A OUTPUT -p tcp -m owner ! --uid-owner debian-tor -j REDIRECT --to-ports 9040
+# 
+# COMMIT
