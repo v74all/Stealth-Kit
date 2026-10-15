@@ -179,7 +179,7 @@ tests/run_static_checks.sh                 passed
 نمونه report واقعی scan:
 
 ```text
-backups/scan_report_20260703_083459.json
+backups/scan_report_20261015_075433.json
 ```
 
 نکته: اجرای واقعی `--harden` و `--network` تنظیمات سیستم را تغییر می‌دهد؛ برای همین ابتدا با `--dry-run` تست و review کنید.
@@ -356,7 +356,7 @@ tests/run_static_checks.sh                 passed
 Example real scan report:
 
 ```text
-backups/scan_report_20260703_083459.json
+backups/scan_report_20261015_075433.json
 ```
 
 Note: real `--harden` and `--network` runs change system settings. Review `--dry-run` output first and keep generated reports/backups.
